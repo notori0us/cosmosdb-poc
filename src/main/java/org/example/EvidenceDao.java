@@ -59,6 +59,29 @@ public class EvidenceDao {
         logger.info("Got a page of query result with {} items(s) and request charge of {}",
                 page.getResults().size(), page.getRequestCharge());
 
-        return new EvidencePage(page.getResults(), page.getContinuationToken());
+        return new EvidencePage(page.getResults(), page.getContinuationToken(), page.getRequestCharge());
+    }
+
+    public EvidencePage queryEvidenceByTime(Optional<String> continuationToken) {
+        String query = String.format("Select * from Evidence order by Evidence.modifiedAt desc");
+
+        CosmosQueryRequestOptions requestOptions = new CosmosQueryRequestOptions();
+
+        CosmosPagedIterable<EvidenceRecord> response = db.queryItems(query, requestOptions, EvidenceRecord.class);
+
+        // get one page from the API.
+        // why? because we don't want to do our iteration here;
+        // our clients will call us back with the continuation token to get the next page.
+        FeedResponse<EvidenceRecord> page;
+        if (continuationToken.isPresent()) {
+            page = response.iterableByPage(continuationToken.get(), PREFERRED_PAGE_SIZE).iterator().next();
+        } else {
+            page = response.iterableByPage(PREFERRED_PAGE_SIZE).iterator().next();
+        }
+
+        logger.info("Got a page of query result with {} items(s) and request charge of {}",
+                page.getResults().size(), page.getRequestCharge());
+
+        return new EvidencePage(page.getResults(), page.getContinuationToken(), page.getRequestCharge());
     }
 }

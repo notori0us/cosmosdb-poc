@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -61,19 +58,20 @@ public class Main {
         EvidenceDao dao = new EvidenceDao(client.getDatabase(DATABASE_NAME).getContainer(CONTAINER_NAME));
 
         // seed the database with a lot of evidence
-        createLotsOfEvidence(dao, "BigPartner", 40000);
-        createLotsOfEvidence(dao, "SmallPartner0", 1000);
-        createLotsOfEvidence(dao, "SmallPartner1", 1000);
+        //createLotsOfEvidence(dao, "BigPartner", 40000);
+        //createLotsOfEvidence(dao, "SmallPartner0", 1000);
+        //createLotsOfEvidence(dao, "SmallPartner1", 1000);
         //createLotsOfEvidence(dao, "TinyPartner0", 200);
-        createLotsOfEvidence(dao, "TinyPartner1", 200);
-        createLotsOfEvidence(dao, "TinyPartner2", 200);
+        //createLotsOfEvidence(dao, "TinyPartner1", 200);
+        //createLotsOfEvidence(dao, "TinyPartner2", 200);
         // this example increases the cardinality of partnerID
-        for (int i = 0; i < 2000; i++) {
-            createLotsOfEvidence(dao, "TinyPartner-" + UUID.randomUUID().toString(), 200);
-        }
+        //for (int i = 0; i < 2000; i++) {
+        //    createLotsOfEvidence(dao, "TinyPartner-" + UUID.randomUUID().toString(), 200);
+        //}
 
 
-        //queryAllEvidenceForPartner(dao, "TinyPartner0");
+        queryAllEvidenceForPartner(dao, "BigPartner");
+        //queryAllEvidenceByTime(dao);
     }
 
     /*
@@ -88,18 +86,36 @@ public class Main {
         }
     }
 
-    private static void queryAllEvidenceForPartner(EvidenceDao dao, String partnerID) {
+    private static void queryAllEvidenceByTime(EvidenceDao dao) {
         long start = currentTimeMillis();
 
-        EvidencePage evidencePage = dao.queryEvidenceByPartner(partnerID, Optional.empty());
+        EvidencePage evidencePage = dao.queryEvidenceByTime(Optional.empty());
+        double totalRu = evidencePage.requestCharge();
 
         while (evidencePage.continuationToken() != null) {
-            evidencePage = dao.queryEvidenceByPartner(partnerID, Optional.of(evidencePage.continuationToken()));
+            evidencePage = dao.queryEvidenceByTime(Optional.of(evidencePage.continuationToken()));
+            totalRu += evidencePage.requestCharge();
         }
 
         long end = currentTimeMillis();
 
-        logger.info("It took {} millis to get all evidence for {}", end-start, partnerID);
+        logger.info("It took {} millis to get all evidence, total RU {}", end-start, totalRu);
+    }
+
+    private static void queryAllEvidenceForPartner(EvidenceDao dao, String partnerID) {
+        long start = currentTimeMillis();
+
+        EvidencePage evidencePage = dao.queryEvidenceByPartner(partnerID, Optional.empty());
+        double totalRu = evidencePage.requestCharge();
+
+        while (evidencePage.continuationToken() != null) {
+            evidencePage = dao.queryEvidenceByPartner(partnerID, Optional.of(evidencePage.continuationToken()));
+            totalRu += evidencePage.requestCharge();
+        }
+
+        long end = currentTimeMillis();
+
+        logger.info("It took {} millis to get all evidence for {}, total RU {}", end-start, partnerID, totalRu);
     }
 
     public static Instant randomInstant() {
