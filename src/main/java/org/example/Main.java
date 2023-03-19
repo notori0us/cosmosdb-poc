@@ -6,8 +6,11 @@ import com.azure.identity.DefaultAzureCredentialBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 import static java.lang.System.currentTimeMillis;
@@ -58,19 +61,19 @@ public class Main {
         EvidenceDao dao = new EvidenceDao(client.getDatabase(DATABASE_NAME).getContainer(CONTAINER_NAME));
 
         // seed the database with a lot of evidence
-        //createLotsOfEvidence(dao, "BigPartner", 40000);
-        //createLotsOfEvidence(dao, "SmallPartner0", 1000);
-        //createLotsOfEvidence(dao, "SmallPartner1", 1000);
+        createLotsOfEvidence(dao, "BigPartner", 40000);
+        createLotsOfEvidence(dao, "SmallPartner0", 1000);
+        createLotsOfEvidence(dao, "SmallPartner1", 1000);
         //createLotsOfEvidence(dao, "TinyPartner0", 200);
-        //createLotsOfEvidence(dao, "TinyPartner1", 200);
-        //createLotsOfEvidence(dao, "TinyPartner2", 200);
+        createLotsOfEvidence(dao, "TinyPartner1", 200);
+        createLotsOfEvidence(dao, "TinyPartner2", 200);
         // this example increases the cardinality of partnerID
-        //for (int i = 0; i < 2000; i++) {
-        //    createLotsOfEvidence(dao, "TinyPartner-" + UUID.randomUUID().toString(), 200);
-        //}
+        for (int i = 0; i < 2000; i++) {
+            createLotsOfEvidence(dao, "TinyPartner-" + UUID.randomUUID().toString(), 200);
+        }
 
 
-        queryAllEvidenceForPartner(dao, "TinyPartner1");
+        //queryAllEvidenceForPartner(dao, "TinyPartner0");
     }
 
     /*
@@ -81,7 +84,7 @@ public class Main {
         logger.info("Creating {} evidence for partner {}", howMany, partnerID);
 
         for (int i = 0; i < howMany; i++) {
-            dao.createEvidence(new EvidenceRecord(UUID.randomUUID().toString(), partnerID));
+            dao.createEvidence(new EvidenceRecord(UUID.randomUUID().toString(), partnerID, randomInstant()));
         }
     }
 
@@ -97,5 +100,18 @@ public class Main {
         long end = currentTimeMillis();
 
         logger.info("It took {} millis to get all evidence for {}", end-start, partnerID);
+    }
+
+    public static Instant randomInstant() {
+        // sometime in 2015
+        Instant start = Instant.ofEpochSecond(1426756082);
+        Instant end = Instant.now();
+
+        Random random = new Random();
+        long secondsDifference = ChronoUnit.SECONDS.between(start, end);
+        long randomSeconds = start.getEpochSecond() + random.nextInt((int) secondsDifference);
+        long randomNanos = random.nextInt(1_000_000_000); // Random nanoseconds between 0 and 999,999,999
+
+        return Instant.ofEpochSecond(randomSeconds, randomNanos);
     }
 }

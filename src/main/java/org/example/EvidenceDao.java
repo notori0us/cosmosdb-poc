@@ -14,7 +14,8 @@ import java.util.Optional;
 public class EvidenceDao {
     private static final Logger logger = LoggerFactory.getLogger(EvidenceDao.class);
     private CosmosContainer db;
-    private static int PREFERRED_PAGE_SIZE = 25;
+    // set to -1 for the max possible (can have up to 5s cosmos latency)
+    private static int PREFERRED_PAGE_SIZE = -1;
 
     public EvidenceDao(CosmosContainer db) {
         this.db = db;
@@ -39,7 +40,7 @@ public class EvidenceDao {
         return response.getItem();
     }
     public EvidencePage queryEvidenceByPartner(String partnerID, Optional<String> continuationToken) {
-        String query = String.format("Select * from Evidence where Evidence.partnerID = '%s'", partnerID);
+        String query = String.format("Select * from Evidence where Evidence.partnerID = '%s' order by Evidence.modifiedAt desc", partnerID);
 
         CosmosQueryRequestOptions requestOptions = new CosmosQueryRequestOptions();
 

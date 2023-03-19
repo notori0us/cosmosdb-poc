@@ -1,5 +1,7 @@
 package org.example;
 
-public record EvidenceRecord(String id, String partnerID) {
+import java.time.Instant;
+
+public record EvidenceRecord(String id, String partnerID, Instant modifiedAt) {
 
 }
